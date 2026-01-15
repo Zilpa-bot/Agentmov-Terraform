@@ -10,3 +10,13 @@ module "network" {
 
   psa_prefix_length = 16
 }
+
+module "vpc_connector" {
+  source     = "../../modules/vpc_connector"
+  project_id = var.project_id
+  region     = var.region
+
+  name        = "agentmov-prod-vpc-conn"
+  network     = module.network.vpc_self_link
+  subnet_name = module.network.serverless_connector_subnet_name
+}
