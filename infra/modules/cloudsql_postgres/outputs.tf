@@ -17,3 +17,11 @@ output "db_user" {
 output "db_password_secret_id" {
   value = google_secret_manager_secret.app_user_password.id
 }
+
+output "db_name_secret_id" {
+  value = google_secret_manager_secret.db_name.id
+}
+
+output "db_user_secret_id" {
+  value = google_secret_manager_secret.db_user.id
+}

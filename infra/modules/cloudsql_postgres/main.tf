@@ -30,6 +30,34 @@ resource "google_secret_manager_secret_version" "app_user_password" {
   secret_data = random_password.app_user_password.result
 }
 
+resource "google_secret_manager_secret" "db_name" {
+  project   = var.project_id
+  secret_id = "${var.instance_name}-db-name"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "db_name" {
+  secret      = google_secret_manager_secret.db_name.id
+  secret_data = var.db_name
+}
+
+resource "google_secret_manager_secret" "db_user" {
+  project   = var.project_id
+  secret_id = "${var.instance_name}-db-user"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "db_user" {
+  secret      = google_secret_manager_secret.db_user.id
+  secret_data = var.app_db_user
+}
+
 resource "google_sql_database_instance" "pg" {
   project          = var.project_id
   name             = var.instance_name

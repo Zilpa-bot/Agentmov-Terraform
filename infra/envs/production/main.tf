@@ -20,3 +20,20 @@ module "vpc_connector" {
   network     = module.network.vpc_self_link
   subnet_name = module.network.serverless_connector_subnet_name
 }
+
+module "artifact_registry" {
+  source     = "../../modules/artifact_registry"
+  project_id = var.project_id
+  region     = var.region
+
+  repository_id = "agentmov"
+  description   = "Agentmov container images"
+}
+
+resource "google_artifact_registry_repository_iam_member" "gateway_runtime_reader" {
+  project    = var.project_id
+  location   = module.artifact_registry.location
+  repository = module.artifact_registry.repository_id
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:agentmov-gateway-runtime@${var.project_id}.iam.gserviceaccount.com"
+}

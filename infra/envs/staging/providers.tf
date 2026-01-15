@@ -6,3 +6,4 @@ provider "google" {
   region                      = var.region
   impersonate_service_account = "tf-deployer@agentmov-on-cloud-staging.iam.gserviceaccount.com"
 }
+
