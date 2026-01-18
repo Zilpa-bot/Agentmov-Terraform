@@ -1,0 +1,90 @@
+name: terraform-plan
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: tf-plan-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  plan-stg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER_TF_STG }}
+          service_account: ${{ secrets.GCP_SA_EMAIL_TF_STG }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt (check)
+        working-directory: infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init (stg)
+        working-directory: infra/envs/staging
+        run: terraform init -no-color -backend-config=backend.hcl
+
+      - name: Terraform validate (stg)
+        working-directory: infra/envs/staging
+        run: terraform validate -no-color
+
+      - name: Terraform plan (stg)
+        working-directory: infra/envs/staging
+        run: terraform plan -no-color -out=tfplan
+
+      - name: Upload plan artifact (stg)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-stg
+          path: infra/envs/staging/tfplan
+
+  plan-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER_TF_PROD }}
+          service_account: ${{ secrets.GCP_SA_EMAIL_TF_PROD }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt (check)
+        working-directory: infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init (prod)
+        working-directory: infra/envs/production
+        run: terraform init -no-color -backend-config=backend.hcl
+
+      - name: Terraform validate (prod)
+        working-directory: infra/envs/production
+        run: terraform validate -no-color
+
+      - name: Terraform plan (prod)
+        working-directory: infra/envs/production
+        run: terraform plan -no-color -out=tfplan
+
+      - name: Upload plan artifact (prod)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-prod
+          path: infra/envs/production/tfplan

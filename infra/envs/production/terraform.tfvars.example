@@ -1,2 +1,11 @@
 project_id = "agentmov-on-cloud-prod"
 region     = "me-west1"
+
+github_owner                   = "Zilpa-bot"
+github_wif_pool_id             = "github-actions-prod"
+github_wif_provider_id         = "github-actions-prod"
+github_wif_attribute_condition = "assertion.repository_owner == \"Zilpa-bot\" && assertion.repository in [\"Zilpa-bot/Agentmov-Terraform\", \"Zilpa-bot/Agentmov-Gateway\", \"Zilpa-bot/Agentmov-website\", \"Zilpa-bot/Whatsapp-gateway\"] && (assertion.ref == \"refs/heads/main\" || assertion.ref.startsWith(\"refs/tags/\"))"
+tfstate_bucket_name             = "agentmov-tfstate-prod-2057738d"
+tf_github_wif_pool_id           = "github-tf-prod"
+tf_github_wif_provider_id       = "github-tf-prod"
+tf_github_wif_attribute_condition = "assertion.repository == \"Zilpa-bot/Agentmov-Terraform\" && (assertion.ref.startsWith(\"refs/pull/\") || assertion.ref.startsWith(\"refs/tags/v\"))"

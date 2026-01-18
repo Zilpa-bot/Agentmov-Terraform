@@ -1,0 +1,60 @@
+name: Deploy WhatsApp Gateway (production)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: me-west1
+  AR_REPO: agentmov
+  SERVICE_NAME: whatsapp-gateway
+  IMAGE_NAME: whatsapp-gateway
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests (optional)
+        if: ${{ hashFiles('ci/test.sh') != '' }}
+        run: |
+          chmod +x ci/test.sh
+          ./ci/test.sh
+
+      - name: Authenticate to GCP (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER_PROD }}
+          service_account: ${{ secrets.GCP_SA_EMAIL_PROD }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID_PROD }}
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        run: |
+          IMAGE_URI="${REGION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID_PROD }}/${AR_REPO}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker build -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          IMAGE_DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_URI")"
+          echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run services update "${SERVICE_NAME}" \
+            --image "${IMAGE_DIGEST}" \
+            --region "${REGION}" \
+            --project "${{ secrets.GCP_PROJECT_ID_PROD }}" \
+            --quiet
