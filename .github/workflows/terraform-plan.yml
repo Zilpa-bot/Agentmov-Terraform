@@ -48,6 +48,38 @@ jobs:
         working-directory: infra/envs/staging
         run: terraform plan -no-color -out=tfplan
 
+      - name: Render plan comment (stg)
+        if: always()
+        working-directory: infra/envs/staging
+        run: |
+          set -euo pipefail
+
+          if [ -f tfplan ]; then
+            terraform show -no-color tfplan > plan.txt
+            SUMMARY="$(grep -E '^(Plan:|No changes\.)' plan.txt | head -n 1 || true)"
+            STATUS="✅ Plan succeeded"
+          else
+            SUMMARY="(plan file not produced — plan likely failed earlier)"
+            STATUS="❌ Plan failed"
+          fi
+
+          {
+            echo "## Terraform plan — **staging**"
+            echo ""
+            echo "**Status:** ${STATUS}"
+            echo ""
+            echo "**Result:** ${SUMMARY}"
+            echo ""
+            echo "Plan artifact: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > pr_comment.md
+
+      - name: Post sticky PR comment (stg)
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan-stg
+          path: infra/envs/staging/pr_comment.md
+
       - name: Upload plan artifact (stg)
         uses: actions/upload-artifact@v4
         with:
@@ -82,6 +114,38 @@ jobs:
       - name: Terraform plan (prod)
         working-directory: infra/envs/production
         run: terraform plan -no-color -out=tfplan
+
+      - name: Render plan comment (prod)
+        if: always()
+        working-directory: infra/envs/production
+        run: |
+          set -euo pipefail
+
+          if [ -f tfplan ]; then
+            terraform show -no-color tfplan > plan.txt
+            SUMMARY="$(grep -E '^(Plan:|No changes\.)' plan.txt | head -n 1 || true)"
+            STATUS="✅ Plan succeeded"
+          else
+            SUMMARY="(plan file not produced — plan likely failed earlier)"
+            STATUS="❌ Plan failed"
+          fi
+
+          {
+            echo "## Terraform plan — **production**"
+            echo ""
+            echo "**Status:** ${STATUS}"
+            echo ""
+            echo "**Result:** ${SUMMARY}"
+            echo ""
+            echo "Plan artifact: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > pr_comment.md
+
+      - name: Post sticky PR comment (prod)
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan-prod
+          path: infra/envs/production/pr_comment.md
 
       - name: Upload plan artifact (prod)
         uses: actions/upload-artifact@v4
