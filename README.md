@@ -1,4 +1,4 @@
-# Agentmov Terraformm
+# Agentmov Terraform
 
 ## Terraform CI/CD checklist
 
