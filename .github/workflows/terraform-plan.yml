@@ -24,6 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify required secrets (stg)
+        env:
+          WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER_TF_STG }}
+          SA_EMAIL: ${{ secrets.GCP_SA_EMAIL_TF_STG }}
+        run: |
+          if [ -z "$WIF_PROVIDER" ] || [ -z "$SA_EMAIL" ]; then
+            echo "Missing repo secrets: GCP_WIF_PROVIDER_TF_STG and/or GCP_SA_EMAIL_TF_STG"
+            exit 1
+          fi
+
       - id: auth
         uses: google-github-actions/auth@v2
         with:
@@ -90,6 +100,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify required secrets (prod)
+        env:
+          WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER_TF_PROD }}
+          SA_EMAIL: ${{ secrets.GCP_SA_EMAIL_TF_PROD }}
+        run: |
+          if [ -z "$WIF_PROVIDER" ] || [ -z "$SA_EMAIL" ]; then
+            echo "Missing repo secrets: GCP_WIF_PROVIDER_TF_PROD and/or GCP_SA_EMAIL_TF_PROD"
+            exit 1
+          fi
 
       - id: auth
         uses: google-github-actions/auth@v2
