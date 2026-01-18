@@ -16,6 +16,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify required secrets
+        env:
+          WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER_STG }}
+          SA_EMAIL: ${{ secrets.GCP_SA_EMAIL_STG }}
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_STG }}
+        run: |
+          if [ -z "$WIF_PROVIDER" ] || [ -z "$SA_EMAIL" ] || [ -z "$PROJECT_ID" ]; then
+            echo "Missing repo secrets: GCP_WIF_PROVIDER_STG, GCP_SA_EMAIL_STG, and/or GCP_PROJECT_ID_STG"
+            exit 1
+          fi
+
       - name: Authenticate to GCP (WIF)
         uses: google-github-actions/auth@v2
         with:
