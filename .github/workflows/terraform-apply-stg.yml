@@ -36,6 +36,10 @@ jobs:
         working-directory: infra/envs/staging
         run: terraform init -no-color -backend-config=backend.hcl
 
+      - name: Terraform plan (stg)
+        working-directory: infra/envs/staging
+        run: terraform plan -no-color -out=tfplan
+
       - name: Terraform apply (stg)
         working-directory: infra/envs/staging
-        run: terraform apply -no-color -auto-approve
+        run: terraform apply -no-color -auto-approve tfplan
